@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>{{ web.title }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='imgs/logo.jpg') }}" type="image/x-icon">
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <table id="bootstrap_table"></table>
+</div>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/locale/bootstrap-table-zh-CN.min.js"></script>
+<script>
+    $(function () {
+        var oTable = new TableInit();
+        oTable.Init();
+    })
+
+    var TableInit = function () {
+        var oTableInit = {};
+        oTableInit.Init = function () {
+            var columns = [{
+                field: 'id',
+                title: 'id',
+                visible: false,
+            }, {
+                field: 'title',
+                title: '标题',
+            }, {
+                field: 'link',
+                title: '链接',
+            }, {
+                field: 'good',
+                title: '点赞',
+            }, {
+                field: 'views',
+                title: '查看',
+            }, {
+                field: 'author',
+                title: '发布',
+            }, {
+                field: 'create_time',
+                title: '时间',
+            }]
+
+            $('#bootstrap_table').bootstrapTable({
+                url: '/get_links',
+                method: 'get',
+                uniqueId: 'id',
+                dataType: 'json',
+                pageNumber: 1,
+                pageSize: 20,
+                sidePagination: "server",
+                search: true,
+                strictSearch: false,
+                queryParams: function (params) {
+                    query_params = {
+                        rows: params.limit,
+                        page: (params.offset / params.limit) + 1,
+                        sort: params.sort,
+                        order: params.order,
+                        keyword: $('input.search-input').val(),
+                    }
+                    return query_params;
+                },
+                cache: false,
+                pagination: true,
+                columns: columns,
+                paginationDetailHAlign: ' valid-feedback'
+            });
+        }
+        return oTableInit;
+    }
+</script>
+</body>
+</html>
