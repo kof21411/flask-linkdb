@@ -2,17 +2,102 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>{{ web.title }}</title>
-    <link rel="icon" href="{{ url_for('static', filename='imgs/logo.jpg') }}" type="image/x-icon">
-    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>{{ web.title }} - {{ web.subtitle }}</title>
+    <link rel="icon" href="https://gravatar.loli.net/avatar/c585fb80cd84c392c199d38b38a4f02d?s=50&r=X&d=mm"
+          type="image/x-icon">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+          integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.css" rel="stylesheet">
 </head>
-<body>
+<body style="padding-top: 70px;">
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">{{ web.title }}</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="active"><a href="/">探索</a></li>
+                <li><a target="_blank" href="https://www.bewindward.com">博客</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
 <div class="container">
-    <table id="bootstrap_table"></table>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-sm-12 col-md-6">
+                    <div class="dt-buttons btn-group flex-wrap" id="toolbar">
+                        <button class="btn btn-primary buttons-html5" type="button"
+                                data-target="#modal-post" data-toggle="modal">
+                            <span>提交链接</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-sm-12 col-md-6"></div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <table id="bootstrap_table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.0.2/js/bootstrap.bundle.min.js"></script>
+<div class="modal fade" id="modal-post" data-keyboard="true" tabindex="0">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <h4 class="modal-title">提交链接</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="title">标题</label>
+                        <input type="text" class="form-control" id="title" placeholder="可为空">
+                    </div>
+                    <div class="form-group">
+                        <label for="link">链接</label>
+                        <input type="url" class="form-control" id="link" placeholder="">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">类型</label>
+                        <select class="form-control" id="category">
+                            {% for category in categorys %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="author">发布者</label>
+                        <input type="text" class="form-control" id="author" placeholder="可为空">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" id="submit_post">确认</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"
+        integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/locale/bootstrap-table-zh-CN.min.js"></script>
 <script>
@@ -52,6 +137,7 @@
                 url: '/get_links',
                 method: 'get',
                 uniqueId: 'id',
+                toolbar: '#toolbar',
                 dataType: 'json',
                 pageNumber: 1,
                 pageSize: 20,
@@ -71,7 +157,7 @@
                 cache: false,
                 pagination: true,
                 columns: columns,
-                paginationDetailHAlign: ' valid-feedback'
+                paginationDetailHAlign: ' hide'
             });
         }
         return oTableInit;

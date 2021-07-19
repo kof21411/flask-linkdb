@@ -1,5 +1,14 @@
 {
   "web": {
-    "title": "记录动心的视频、图片、音乐等链接~"
+    "title": "风之链",
+    "subtitle": "上风小站",
+    "desc": "记录和探索心动的视频、图片、音乐等链接~"
+  },
+  "mysql": {
+    "host": "localhost",
+    "user": "root",
+    "port": "3306",
+    "pass": "admin@2018",
+    "db": "db_links"
   }
 }
