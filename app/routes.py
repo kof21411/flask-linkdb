@@ -6,7 +6,7 @@ from sqlalchemy import text, or_, and_
 
 from app import app, db
 from app.models import Category, Links, ProsAndCons
-from common.utils import ConfigUtils
+from common.utils import ConfigUtils, Utils
 
 
 @app.route('/')
@@ -85,7 +85,7 @@ def op_pros_and_cons():
         link_id, type = form.get("link_id", None), form.get("type", None)
 
         if not link_id or not type:
-            raise RuntimeError("输入表单填写有误")
+            return json.dumps({"status": False, "msg": "输入表单填写有误"}, ensure_ascii=False)
 
         ipaddr = request.remote_addr
         pros_and_cons = ProsAndCons.query.filter(
@@ -122,18 +122,24 @@ def post_link():
             "category", None)
 
         if len(link) == 0 or not category:
-            raise RuntimeError("输入表单填写有误")
-
-        if len(title) == 0:
-            title = "无标题"
-        if len(author) == 0:
-            author = "匿名者"
+            return json.dumps({"status": False, "msg": "输入表单填写有误"}, ensure_ascii=False)
 
         ipaddr = request.remote_addr
 
         author_link = Links.query.filter_by(ipaddr=ipaddr).order_by(text("create_time desc")).first()
-        if author_link and not ((datetime.datetime.now() - author_link.create_time).seconds > 30):
+        if author_link \
+                and not ((datetime.datetime.now() - author_link.create_time).seconds > 30):
             return json.dumps({"status": False, "msg": "无法连续提交，稍等一段时间"}, ensure_ascii=False)
+
+        if len(author) == 0:
+            author = "匿名者"
+
+        status, html = Utils.check_url(link)
+        if status == None or len(html) < 100:
+            return json.dumps({"status": False, "msg": "此链接无效"}, ensure_ascii=False)
+
+        if len(title) == 0:
+            title = Utils.get_web_title(html)
 
         if Links.query.filter_by(link=link).first():
             return json.dumps({"status": False, "msg": "该链接已存在"}, ensure_ascii=False)

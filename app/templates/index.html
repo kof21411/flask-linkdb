@@ -30,6 +30,7 @@
             <ul class="nav navbar-nav">
                 <li class="active"><a href="/">探索</a></li>
                 <li><a target="_blank" href="https://www.bewindward.com">博客</a></li>
+                <li><a target="_blank" href="https://github.com/windward007/flask-linkdb">Github</a></li>
             </ul>
         </div>
     </div>
@@ -108,6 +109,8 @@
 <script src="{{ url_for('static', filename='js/bootstrap-table-zh-CN.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/sweetalert2.all.js') }}"></script>
 <script>
+    var category_objs = {{ data.category_objs|tojson }};
+
     const showLoading = function (link) {
         swal({
             title: '跳转中...',
@@ -125,7 +128,12 @@
     };
 
     $(function () {
-        var oTable = new TableInit();
+        var cardview = false;
+        if (/Android|iPhone|iPad|iPod|BlackBerry|webOS|Windows Phone|SymbianOS|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            cardview = true;
+        }
+
+        var oTable = new TableInit(cardview);
         oTable.Init();
 
         function check_form() {
@@ -154,6 +162,12 @@
             if (data === false)
                 return
 
+            Swal.fire({
+                title: "等待中...",
+                timerProgressBar: true,
+                icon: 'info',
+                showConfirmButton: false
+            })
             $.post({
                 data: data,
                 dataType: 'json',
@@ -226,9 +240,7 @@
         })
     }
 
-    var category_objs = {{ data.category_objs|tojson }};
-
-    var TableInit = function () {
+    var TableInit = function (cardview) {
         var oTableInit = {};
         oTableInit.Init = function () {
             function actionFormatter(value, row, index) {
@@ -312,7 +324,8 @@
                 pagination: true,
                 columns: columns,
                 showColumns: true,
-                paginationDetailHAlign: ' hide'
+                paginationDetailHAlign: ' hide',
+                cardView: cardview
             });
         }
         return oTableInit;
