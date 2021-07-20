@@ -2,12 +2,16 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ web.title }} - {{ web.subtitle }}</title>
+    <meta name="description" content="{{ web.desc }}">
+    <meta name="keywords" content="{{ web.title }}">
+    <meta name="author" content="www.bewindward.com">
     <link rel="icon" href="https://gravatar.loli.net/avatar/c585fb80cd84c392c199d38b38a4f02d?s=50&r=X&d=mm"
           type="image/x-icon">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
-          integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-table.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/sweetalert2.min.css') }}">
 </head>
 <body style="padding-top: 70px;">
 <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -32,6 +36,7 @@
 </nav>
 <div class="container">
     <div class="card">
+        <div class="alert alert-info" role="alert">{{ web.desc }}</div>
         <div class="card-body">
             <div class="row">
                 <div class="col-sm-12 col-md-6">
@@ -52,6 +57,11 @@
         </div>
     </div>
 </div>
+<footer class="footer" style="margin-top: 20px">
+    <div class="container text-center">
+        <p class="text-muted">Copyright © 2021 <a href="https://www.bewindward.com">上风小站</a>. All Rights Reserved.</p>
+    </div>
+</footer>
 <div class="modal fade" id="modal-post" data-keyboard="true" tabindex="0">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -69,12 +79,12 @@
                     </div>
                     <div class="form-group">
                         <label for="link">链接</label>
-                        <input type="url" class="form-control" id="link" placeholder="">
+                        <input type="url" class="form-control" id="link" placeholder="https://xxx.com">
                     </div>
                     <div class="form-group">
                         <label for="category">类型</label>
                         <select class="form-control" id="category">
-                            {% for category in categorys %}
+                            {% for category in data.categorys %}
                                 <option value="{{ category.id }}">{{ category.name }}</option>
                             {% endfor %}
                         </select>
@@ -92,23 +102,147 @@
         </div>
     </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"
-        integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ"
-        crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
-        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
-        crossorigin="anonymous"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/bootstrap-table.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap-table/1.18.3/locale/bootstrap-table-zh-CN.min.js"></script>
+<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap-table.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/bootstrap-table-zh-CN.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/sweetalert2.all.js') }}"></script>
 <script>
+    const showLoading = function (link) {
+        swal({
+            title: '跳转中...',
+            allowEscapeKey: false,
+            allowOutsideClick: false,
+            timer: 1000,
+            onOpen: () => {
+                swal.showLoading();
+            }
+        }).then(
+            () => {
+                window.open(link);
+            }
+        )
+    };
+
     $(function () {
         var oTable = new TableInit();
         oTable.Init();
+
+        function check_form() {
+            var link = $("#link").val();
+            var title = $("#title").val();
+            var author = $("#author").val();
+            var category = $("#category").val();
+
+            if (link.length === 0) {
+                Swal.fire('输入表单填写有误', '', 'warning')
+                return false
+            }
+
+            return {
+                data: JSON.stringify({
+                    'link': link,
+                    'title': title,
+                    'author': author,
+                    'category': category,
+                })
+            }
+        }
+
+        $("#submit_post").click(function () {
+            var data = check_form();
+            if (data === false)
+                return
+
+            $.post({
+                data: data,
+                dataType: 'json',
+                url: '/post',
+                success: function (res) {
+                    var status = res["status"];
+                    if (status === true) {
+                        Swal.fire(res["msg"], '', 'success');
+
+                        $("#modal-post").modal('hide');
+                        $("#bootstrap_table").bootstrapTable('refresh');
+                    } else Swal.fire(res["msg"], '', 'error');
+                },
+                error: function () {
+                    Swal.fire("网络问题", '', 'error')
+                }
+            })
+        })
     })
+
+    function op(id, type) {
+        var data = $("#bootstrap_table").bootstrapTable("getRowByUniqueId", id);
+
+        var op_data = {
+            data: JSON.stringify({
+                'link_id': data.id,
+                'type': type,
+            })
+        }
+
+        $.post({
+            data: op_data,
+            dataType: 'json',
+            url: '/op',
+            success: function (res) {
+                var status = res["status"];
+                if (status === true) {
+                    Swal.fire(res["msg"], '', 'success');
+                    $("#bootstrap_table").bootstrapTable('refresh');
+                } else Swal.fire(res["msg"], '', 'error');
+            },
+            error: function () {
+                Swal.fire("网络问题", '', 'error')
+            }
+        })
+    }
+
+    function go(id) {
+        var data = $("#bootstrap_table").bootstrapTable("getRowByUniqueId", id);
+
+        var go_data = {
+            data: JSON.stringify({
+                'link_id': data.id,
+            })
+        }
+
+        $.post({
+            data: go_data,
+            dataType: 'json',
+            url: '/go',
+            success: function (res) {
+                var status = res["status"];
+                if (status === true) {
+                    showLoading(res["msg"]);
+                } else Swal.fire(res["msg"], '', 'error');
+            },
+            error: function () {
+                Swal.fire("网络问题", '', 'error')
+            }
+        })
+    }
+
+    var category_objs = {{ data.category_objs|tojson }};
 
     var TableInit = function () {
         var oTableInit = {};
         oTableInit.Init = function () {
+            function actionFormatter(value, row, index) {
+                return "<div class=\"btn-group btn-group-sm\" role=\"group\">" +
+                    "<button onclick='go(" + row.id + ")' title='访问' type=\"button\" class=\"btn btn-default\"><span class=\"glyphicon glyphicon-link\" aria-hidden=\"true\"></span></button>" +
+                    "<button onclick='op(" + row.id + ", 1)' title='点赞' type=\"button\" class=\"btn btn-default\"><span class=\"glyphicon glyphicon-thumbs-up\" aria-hidden=\"true\"></span></button>" +
+                    "<button onclick='op(" + row.id + ", 2)' title='点踩' type=\"button\" class=\"btn btn-default\"><span class=\"glyphicon glyphicon-thumbs-down\" aria-hidden=\"true\"></span></button>" +
+                    "</div>";
+            }
+
+            function categoryFormatter(value, row, index) {
+                return category_objs[value];
+            }
+
             var columns = [{
                 field: 'id',
                 title: 'id',
@@ -119,18 +253,38 @@
             }, {
                 field: 'link',
                 title: '链接',
+                visible: false
             }, {
-                field: 'good',
-                title: '点赞',
-            }, {
-                field: 'views',
-                title: '查看',
+                field: 'category',
+                title: '分类',
+                sortable: true,
+                formatter: categoryFormatter,
             }, {
                 field: 'author',
                 title: '发布',
             }, {
+                field: 'pros',
+                title: '点赞',
+                sortable: true,
+            }, {
+                field: 'cons',
+                title: '点踩',
+                sortable: true,
+            }, {
+                field: 'views',
+                title: '查看',
+                sortable: true,
+            }, {
                 field: 'create_time',
                 title: '时间',
+                sortable: true,
+                visible: false
+            }, {
+                field: 'action',
+                title: '操作',
+                align: 'center',
+                valign: 'middle',
+                formatter: actionFormatter,
             }]
 
             $('#bootstrap_table').bootstrapTable({
@@ -157,6 +311,7 @@
                 cache: false,
                 pagination: true,
                 columns: columns,
+                showColumns: true,
                 paginationDetailHAlign: ' hide'
             });
         }

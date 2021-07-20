@@ -6,9 +6,9 @@
   },
   "mysql": {
     "host": "localhost",
-    "user": "root",
-    "port": "3306",
-    "pass": "admin@2018",
-    "db": "db_links"
+    "user": "user",
+    "port": "port",
+    "pass": "pass",
+    "db": "dbname"
   }
 }
