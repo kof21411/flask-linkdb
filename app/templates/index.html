@@ -232,6 +232,7 @@
                 var status = res["status"];
                 if (status === true) {
                     showLoading(res["msg"]);
+                    $("#bootstrap_table").bootstrapTable('refresh');
                 } else Swal.fire(res["msg"], '', 'error');
             },
             error: function () {

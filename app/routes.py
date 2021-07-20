@@ -70,6 +70,8 @@ def go_to_link():
         link = Links.query.filter_by(id=int(link_id)).first()
         if not link:
             raise RuntimeError("不存在该链接")
+        link.views += 1
+        db.session.commit()
         return json.dumps({"status": True, "msg": link.link}, ensure_ascii=False)
     except Exception as e:
         print(e)
